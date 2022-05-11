@@ -3,8 +3,9 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-angular-front/node-modules
-angular-front/e2e
+**/node_modules/
+**/e2e/
+
 
 ### STS ###
 .apt_generated

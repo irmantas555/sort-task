@@ -1,0 +1,27 @@
+<div class="h-100 w-100 text-center bg-secondary">
+  <div class="d-flex flex-column align-items-center">
+    <mat-label class="h5 text-white mt-5 w-50">Select sorting algorithm</mat-label>
+    <mat-select (selectionChange)="assignAlgorithm()" [(value)]="selected" class="my-5 w-50 bg-white select-options">
+      <mat-option *ngFor="let item of algorithmOptions" [value]="item">
+        <mat-label>{{item}}</mat-label>
+      </mat-option>
+    </mat-select>
+  </div>
+  <mat-label class="h5 text-white text-center mt-5">Choose file</mat-label>
+  <div class="d-flex justify-content-center mt-5">
+    <div class="input-group mb-3 w-50">
+      <div class="custom-file">
+        <input (change)="assignFile($event.target)" class="custom-file-input" id="inputGroupFile01" type="file">
+        <label class="custom-file-label" for="inputGroupFile01">{{sortTask.file ? sortTask.file.name : 'Choose file'}}</label>
+      </div>
+    </div>
+  </div>
+  <button (click)="submitInput()" class="btn btn-dark mt-4">Submit</button>
+  <div *ngIf="answer" class="d-flex flex-column align-items-center">
+    <mat-label class="text-danger">Task took {{answer.timeSpendInNanoSec.toLocaleString()}} nanoseconds</mat-label>
+    <div *ngFor="let item of answer.studentList" class="d-flex justify-content-between w-25 border-bottom">
+      <mat-label>{{item.name}} -</mat-label>
+      <mat-label>{{item.mark}}</mat-label>
+    </div>
+  </div>
+</div>
