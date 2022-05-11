@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -12,14 +15,14 @@ import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import lt.irmantasm.uniquex.dto.AnswerDto;
+import lombok.SneakyThrows;
 import lt.irmantasm.uniquex.dto.SortingTask;
 import lt.irmantasm.uniquex.model.Student;
 
 @Service
 public class SortingService {
 
-    public AnswerDto sortStudentsByAlgorithm(SortingTask task) {
+    public List<Student> sortStudentsByAlgorithm(SortingTask task) {
 
         List<Student> parsedList = null;
         try {
@@ -39,8 +42,7 @@ public class SortingService {
         }
     }
 
-    private AnswerDto sortByBubble(List<Student> list) {
-        long beginTime = System.nanoTime();
+    private List<Student> sortByBubble(List<Student> list) {
         Student[] studentsArray = list.toArray(new Student[0]);
         int n = studentsArray.length;
         for (int i = 0; i < n - 1; i++) {
@@ -52,77 +54,86 @@ public class SortingService {
                 }
             }
         }
-        long endTime = System.nanoTime();
-        long nanoSecs = endTime - beginTime;
-        return new AnswerDto(nanoSecs, Arrays.asList(studentsArray));
+        Arrays.stream(studentsArray).forEach(System.out::println);
+        return Arrays.asList(studentsArray);
     }
 
-    private AnswerDto sortByHeap(List<Student> list) {
-        long beginTime = System.nanoTime();
+    private List<Student> sortByHeap(List<Student> list) {
         Student[] studentsArray = list.toArray(new Student[0]);
         int n = studentsArray.length;
         for (int i = n / 2 - 1; i >= 0; i--) {
             heapify(studentsArray, n, i);
-        }
-        for (int i = n - 1; i > 0; i--) {
-            Student temp = studentsArray[0];
-            studentsArray[0] = studentsArray[i];
-            studentsArray[i] = temp;
-            heapify(studentsArray, i, 0);
-        }
-        long endTime = System.nanoTime();
-        long nanoSecs = endTime - beginTime;
-        return new AnswerDto(nanoSecs, Arrays.asList(studentsArray));
-    }
+            for (int j = n - 1; j > 0; j--) {
+                Student temp = studentsArray[0];
+                studentsArray[0] = studentsArray[j];
+                studentsArray[j] = temp;
 
-    private AnswerDto sortByMerge(List<Student> list) {
-        long beginTime = System.nanoTime();
-        Student[] studentsArray = list.toArray(new Student[0]);
-        int n = studentsArray.length;
-        sortMerge(studentsArray, n);
-        long endTime = System.nanoTime();
-        long nanoSecs = endTime - beginTime;
-        return new AnswerDto(nanoSecs, Arrays.asList(studentsArray));
-    }
-
-    private void sortMerge(Student[] studentsArray, int n) {
-        if (n < 2) {
-            return;
-        }
-        int mid = n / 2;
-        Student[] l = new Student[mid];
-        Student[] r = new Student[n - mid];
-
-        for (int i = 0; i < mid; i++) {
-            l[i] = studentsArray[i];
-        }
-        for (int i = mid; i < n; i++) {
-            r[i - mid] = studentsArray[i];
-        }
-        sortMerge(l, mid);
-        sortMerge(r, n - mid);
-
-        mergeMerge(studentsArray, l, r, mid, n - mid);
-    }
-
-    void mergeMerge(
-            Student[] a, Student[] l, Student[] r, int left, int right) {
-
-        int i = 0;
-        int j = 0;
-        int k = 0;
-        while (i < left && j < right) {
-            if (l[i].getMark() <= r[j].getMark()) {
-                a[k++] = l[i++];
-            } else {
-                a[k++] = r[j++];
+                heapify(studentsArray, j, 0);
             }
         }
-        while (i < left) {
-            a[k++] = l[i++];
+        Arrays.stream(studentsArray).forEach(System.out::println);
+        return Arrays.asList(studentsArray);
+    }
+
+    private List<Student> sortByMerge(List<Student> list) {
+        Student[] studentsArray = list.toArray(new Student[0]);
+        int n = studentsArray.length;
+        sortMerge(studentsArray, 0, studentsArray.length - 1);
+        Arrays.stream(studentsArray).forEach(System.out::println);
+        return Arrays.asList(studentsArray);
+    }
+
+    private void sortMerge(Student[] studentsArray, int l, int r) {
+        if (l < r) {
+            int m = l + (r - l) / 2;
+
+            sortMerge(studentsArray, l, m);
+            sortMerge(studentsArray, m + 1, r);
+
+            mergeMerge(studentsArray, l, m, r);
         }
-        while (j < right) {
-            a[k++] = r[j++];
+    }
+
+    void mergeMerge(Student[] arr, int l, int m, int r)
+    {
+        int n1 = m - l + 1;
+        int n2 = r - m;
+
+        Student[] L = new Student[n1];
+        Student[] R = new Student[n2];
+
+        for (int i = 0; i < n1; ++i) {
+            L[i] = arr[l + i];
+        }
+        for (int j = 0; j < n2; ++j) {
+            R[j] = arr[m + 1 + j];
+        }
+
+        int i = 0, j = 0;
+
+        int k = l;
+        while (i < n1 && j < n2) {
+            if (studentCompare(L[i],R[j]) <= 0) {
+                arr[k] = L[i];
+                i++;
+            }
+            else {
+                arr[k] = R[j];
+                j++;
+            }
+            k++;
+        }
+
+        while (i < n1) {
+            arr[k] = L[i];
+            i++;
+            k++;
+        }
+
+        while (j < n2) {
+            arr[k] = R[j];
+            j++;
+            k++;
         }
     }
 
@@ -140,6 +151,8 @@ public class SortingService {
             heapify(arr, n, largest);
         }
     }
+
+
 
     private List<Student> parseFile(MultipartFile file) throws IOException {
         InputStream inputStream = file.getInputStream();
@@ -170,5 +183,14 @@ public class SortingService {
 
     double studentCompare(Student student1, Student student2) {
         return student1.getMark() - student2.getMark();
+    }
+
+    @SneakyThrows
+    public List<Student> sortPreparedTask() {
+        String filePath = "C:\\Users\\Irmantas\\IdeaProjects\\uniquex\\uniquex\\src\\main\\resources\\test1.txt";
+        Path path = Paths.get(filePath);
+        List<String> strings = Files.readAllLines(path);
+        List<Student> studentList = parseStudents(strings);
+        return sortByMerge(studentList);
     }
 }
